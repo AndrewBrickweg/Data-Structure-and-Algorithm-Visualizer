@@ -12,25 +12,22 @@ const Home = () => {
 
       <div className="flex flex-col items-center gap-4">
         {/* Example links to algorithm visualizations */}
-        <Link
-          href="/algorithms/sorting"
-          className="text-blue-500 hover:underline text-xl"
-        >
-          Sorting Algorithms
+        <Link href="/algorithms/sorting">
+          <a className="text-blue-500 hover:underline text-xl">
+            Sorting Algorithms
+          </a>
         </Link>
 
-        <Link
-          href="/algorithms/pathfinding"
-          className="text-blue-500 hover:underline text-xl"
-        >
-          Pathfinding Algorithms
+        <Link href="/algorithms/pathfinding">
+          <a className="text-blue-500 hover:underline text-xl">
+            Pathfinding Algorithms
+          </a>
         </Link>
 
-        <Link
-          href="/algorithms/graph"
-          className="text-blue-500 hover:underline text-xl"
-        >
-          Graph Algorithms
+        <Link href="/algorithms/graph">
+          <a className="text-blue-500 hover:underline text-xl">
+            Graph Algorithms
+          </a>
         </Link>
       </div>
     </main>
