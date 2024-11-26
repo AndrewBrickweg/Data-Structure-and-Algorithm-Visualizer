@@ -1,3 +1,9 @@
+Set up project in a space environment with a rotating clock
+
+as you rotate around the clock you can click on different algorithm visualizers
+
+representing space and time complexity
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

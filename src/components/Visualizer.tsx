@@ -6,17 +6,18 @@ import * as THREE from "three";
 interface VisualizerProps {
   algorithm: string;
 }
+
 const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
   ({ algorithm }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const barsRef = useRef<THREE.Mesh[]>([]); // Reference to the 3D bars
+    const barsRef = useRef<THREE.Mesh[]>([]); // References to the 3D bars
     const heights = useRef<number[]>([]); // Store bar heights for sorting
 
     // Expose sortBars function to the parent component through the ref
     useImperativeHandle(ref, () => ({
       sortBars: async () => {
         console.log("Sorting bars triggered for algorithm:", algorithm); // Debug log
-        const lowerCaseAlgorithm = algorithm.toLowerCase(); // Normalize the case
+        const lowerCaseAlgorithm = algorithm.toLowerCase();
         if (lowerCaseAlgorithm === "bubblesort") {
           await bubbleSort();
         } else {
@@ -25,13 +26,14 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       },
     }));
 
+    // Bubble Sort Algorithm
     const bubbleSort = async () => {
-      console.log("Starting Bubble Sort..."); // Debug log
+      console.log("Starting Bubble Sort...");
+
       const n = heights.current.length;
       let swapped;
 
-      // Bubble sort animation logic
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < n - 1; i++) {
         swapped = false;
         for (let j = 0; j < n - 1 - i; j++) {
           if (heights.current[j] > heights.current[j + 1]) {
@@ -41,13 +43,16 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
               heights.current[j],
             ];
 
-            // Swap the 3D bars in scene
+            // Swap bars in array
             const bar1 = barsRef.current[j];
             const bar2 = barsRef.current[j + 1];
+            [barsRef.current[j], barsRef.current[j + 1]] = [
+              barsRef.current[j + 1],
+              barsRef.current[j],
+            ];
 
-            // Animate bar swap
+            // Animate the swap
             await animateSwap(bar1, bar2);
-
             swapped = true;
           }
         }
@@ -55,26 +60,26 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         // If no elements were swapped, the array is sorted
         if (!swapped) break;
       }
-      console.log("Bubble Sort completed."); // Debug log
+
+      console.log("Bubble Sort completed.");
     };
 
+    // Animate Bar Swap
     const animateSwap = (bar1: THREE.Mesh, bar2: THREE.Mesh) => {
-      console.log(
-        `Swapping bars at positions: ${bar1.position.y}, ${bar2.position.y}`
-      ); // Debug log
       return new Promise<void>((resolve) => {
-        const initialPos1 = bar1.position.y;
-        const initialPos2 = bar2.position.y;
+        const initialX1 = bar1.position.x;
+        const initialX2 = bar2.position.x;
 
-        const tweenDuration = 200; // Animation duration in milliseconds
-        let elapsedTime = 0;
+        const duration = 300; // Animation duration in milliseconds
+        const startTime = performance.now();
 
-        const animate = () => {
-          elapsedTime += 16; // Approximate time per frame (60fps)
+        const animate = (currentTime: number) => {
+          const elapsed = currentTime - startTime;
+          const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
 
-          const t = Math.min(elapsedTime / tweenDuration, 1);
-          bar1.position.y = initialPos1 * (1 - t) + initialPos2 * t;
-          bar2.position.y = initialPos2 * (1 - t) + initialPos1 * t;
+          // Interpolate positions
+          bar1.position.x = initialX1 * (1 - t) + initialX2 * t;
+          bar2.position.x = initialX2 * (1 - t) + initialX1 * t;
 
           if (t < 1) {
             requestAnimationFrame(animate);
@@ -83,7 +88,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           }
         };
 
-        animate();
+        requestAnimationFrame(animate);
       });
     };
 
@@ -107,7 +112,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       // Generate bars
       const barCount = 10;
       const barWidth = 1;
-      const spacing = 1.2;
+      const spacing = 1.5;
       heights.current = Array.from(
         { length: barCount },
         () => Math.random() * 10 + 1
@@ -129,11 +134,19 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         barsRef.current.push(bar);
       }
 
+      // Add lighting
+      const light = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(light);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(0, 20, 10);
+      scene.add(directionalLight);
+
       // Animation loop
-      function animate() {
+      const animate = () => {
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
-      }
+      };
       animate();
 
       // Clean up on unmount
@@ -148,6 +161,6 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
   }
 );
 
-Visualizer.displayName = "Visualizer"; // Optional: To improve debugging and React DevTools
+Visualizer.displayName = "Visualizer";
 
 export default Visualizer;
