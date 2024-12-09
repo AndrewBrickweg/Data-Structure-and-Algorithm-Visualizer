@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+// import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
+import React from "react";
 
 interface VisualizerProps {
   algorithm: string;
 }
 
+//define specific references
 const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
   ({ algorithm }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -14,6 +17,8 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     const heights = useRef<number[]>([]); // Store bar heights for sorting
 
     // Expose sortBars function to the parent component through the ref
+
+    //calls the specific sorting algorithm
     useImperativeHandle(ref, () => ({
       sortBars: async () => {
         console.log("Sorting bars triggered for algorithm:", algorithm); // Debug log
@@ -26,15 +31,16 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       },
     }));
 
-    // Bubble Sort Algorithm
+    // Bubble Sort Algorithm for visualiser
     const bubbleSort = async () => {
       console.log("Starting Bubble Sort...");
 
       const n = heights.current.length;
+      console.log(heights);
       let swapped;
 
       for (let i = 0; i < n - 1; i++) {
-        swapped = false;
+        swapped = false; //flag for stop
         for (let j = 0; j < n - 1 - i; j++) {
           if (heights.current[j] > heights.current[j + 1]) {
             // Swap heights in array
@@ -156,7 +162,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     }, []);
 
     return (
+      // <Canvas>
       <div ref={containerRef} style={{ width: "100%", height: "100vh" }} />
+      // </Canvas>
     );
   }
 );
