@@ -22,6 +22,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     useImperativeHandle(ref, () => ({
       sortBars: async () => {
         console.log("Sorting bars triggered for algorithm:", algorithm); // Debug log
+
         const lowerCaseAlgorithm = algorithm.toLowerCase();
         if (lowerCaseAlgorithm === "bubblesort") {
           await bubbleSort();
