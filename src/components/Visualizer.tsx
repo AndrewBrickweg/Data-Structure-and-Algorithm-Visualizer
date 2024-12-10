@@ -38,6 +38,19 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           console.log(`Unknown algorithm: ${lowerCaseAlgorithm}`);
         }
       },
+      reset: () => {
+        console.log("reset clicked");
+        barsRef.current.forEach((bar) => scene.remove(bar));
+        barsRef.current = []; // Clear the reference array
+        heights.current = []; // Reset heights array
+        const newBars = generateBars();
+        newBars.forEach((bar) => {
+          scene.add(bar);
+          barsRef.current.push(bar);
+        });
+
+        console.log("Bars reset successfully.");
+      },
     }));
     //*****************************************************************
 
@@ -114,6 +127,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
     //*****************************************************************
     const generateBars = () => {
+      //clear old bars first
+      barsRef.current.forEach((bar) => scene.remove(bar));
+      barsRef.current = []; // Clear the reference array
       // Generate bars
       const barCount = 10;
       const barWidth = 1;
@@ -146,11 +162,12 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     };
     //***************************************************************** */
 
+    const scene = useRef(new THREE.Scene()).current; // Ensure a single scene instance
+
     useEffect(() => {
       if (!containerRef.current) return;
 
       // Set up scene, camera, and renderer
-      const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
         75,
         window.innerWidth / window.innerHeight,
@@ -199,11 +216,6 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       };
     }, [resetCounter]);
 
-    const reset = () => {
-      console.log("reset clicked");
-      setResetCounter((prev) => prev + 1);
-      console.log(resetCounter);
-    };
     //*****************************************************************
 
     //*****************************************************************
