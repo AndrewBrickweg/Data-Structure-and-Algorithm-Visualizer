@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-// import { Canvas } from "@react-three/fiber";
+import {
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  useState,
+} from "react";
 import * as THREE from "three";
 import React from "react";
 
@@ -9,13 +14,16 @@ interface VisualizerProps {
   algorithm: string;
 }
 
-//define specific references
+//define Visualizer
+//***************************************************************** */
 const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
   ({ algorithm }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const barsRef = useRef<THREE.Mesh[]>([]); // References to the 3D bars
     const heights = useRef<number[]>([]); // Store bar heights for sorting
 
+    //Increment to trigger a reset
+    const [resetCounter, setResetCounter] = useState(0);
     // Expose sortBars function to the parent component through the ref
 
     //calls the specific sorting algorithm
@@ -31,7 +39,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         }
       },
     }));
+    //*****************************************************************
 
+    //*****************************************************************
     // Bubble Sort Algorithm for visualiser
     const bubbleSort = async () => {
       console.log("Starting Bubble Sort...");
@@ -70,14 +80,16 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       console.log("Bubble Sort completed.");
     };
+    //*****************************************************************
 
+    //*****************************************************************
     // Animate Bar Swap
     const animateSwap = (bar1: THREE.Mesh, bar2: THREE.Mesh) => {
       return new Promise<void>((resolve) => {
         const initialX1 = bar1.position.x;
         const initialX2 = bar2.position.x;
 
-        const duration = 300; // Animation duration in milliseconds
+        const duration = 200; // Animation duration in milliseconds
         const startTime = performance.now();
 
         const animate = (currentTime: number) => {
@@ -98,6 +110,41 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         requestAnimationFrame(animate);
       });
     };
+    //*****************************************************************
+
+    //*****************************************************************
+    const generateBars = () => {
+      // Generate bars
+      const barCount = 10;
+      const barWidth = 1;
+      const spacing = 1.5;
+
+      heights.current = Array.from(
+        { length: barCount },
+        () => Math.random() * 10 + 1
+      );
+
+      const bars = [];
+
+      for (let i = 0; i < barCount; i++) {
+        const geometry = new THREE.BoxGeometry(
+          barWidth,
+          heights.current[i],
+          barWidth
+        );
+
+        const material = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+        });
+        const bar = new THREE.Mesh(geometry, material);
+        bar.position.x = i * spacing - (barCount / 2) * spacing;
+        bar.position.y = heights.current[i] / 2;
+        bars.push(bar);
+      }
+
+      return bars;
+    };
+    //***************************************************************** */
 
     useEffect(() => {
       if (!containerRef.current) return;
@@ -116,31 +163,6 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       renderer.setSize(window.innerWidth, window.innerHeight);
       containerRef.current.appendChild(renderer.domElement);
 
-      // Generate bars
-      const barCount = 10;
-      const barWidth = 1;
-      const spacing = 1.5;
-      heights.current = Array.from(
-        { length: barCount },
-        () => Math.random() * 10 + 1
-      );
-
-      for (let i = 0; i < barCount; i++) {
-        const geometry = new THREE.BoxGeometry(
-          barWidth,
-          heights.current[i],
-          barWidth
-        );
-        const material = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(Math.random(), Math.random(), Math.random()),
-        });
-        const bar = new THREE.Mesh(geometry, material);
-        bar.position.x = i * spacing - (barCount / 2) * spacing;
-        bar.position.y = heights.current[i] / 2;
-        scene.add(bar);
-        barsRef.current.push(bar);
-      }
-
       // Add lighting
       const light = new THREE.AmbientLight(0xffffff, 0.5);
       scene.add(light);
@@ -148,6 +170,21 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
       directionalLight.position.set(0, 20, 10);
       scene.add(directionalLight);
+
+      //generate and render bars
+      const renderBars = () => {
+        barsRef.current.forEach((bar) => scene.remove(bar));
+        barsRef.current = [];
+
+        //generate new bars
+        const newBars = generateBars();
+        newBars.forEach((bar) => {
+          scene.add(bar);
+          barsRef.current.push(bar);
+        });
+      };
+
+      renderBars();
 
       // Animation loop
       const animate = () => {
@@ -160,12 +197,19 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       return () => {
         renderer.dispose();
       };
-    }, []);
+    }, [resetCounter]);
+
+    const reset = () => {
+      console.log("reset clicked");
+      setResetCounter((prev) => prev + 1);
+      console.log(resetCounter);
+    };
+    //*****************************************************************
+
+    //*****************************************************************
 
     return (
-      // <Canvas>
       <div ref={containerRef} style={{ width: "100%", height: "100vh" }} />
-      // </Canvas>
     );
   }
 );
