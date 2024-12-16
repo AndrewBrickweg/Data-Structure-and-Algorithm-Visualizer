@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-  useState,
-} from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 import React from "react";
 
@@ -19,14 +13,22 @@ interface VisualizerProps {
 const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
   ({ algorithm }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const barsRef = useRef<THREE.Mesh[]>([]); // References to the 3D bars
-    const heights = useRef<number[]>([]); // Store bar heights for sorting
 
-    //Increment to trigger a reset
-    const [resetCounter, setResetCounter] = useState(0);
+    //refs for bars
+    const barsRef = useRef<THREE.Mesh[]>([]);
+    const heights = useRef<number[]>([]);
+
+    //refs to resize screen
+    const sceneRef = useRef<THREE.Scene | null>(null);
+    const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+
+    //refs for single screen render and animation tracking
+    // const initializedRef = useRef(false);
+    // const animationFrameRef = useRef<number | null>(null); // Track the animation frame
+
     // Expose sortBars function to the parent component through the ref
-
-    //calls the specific sorting algorithm
+    // Calls the specific sorting algorithm
     useImperativeHandle(ref, () => ({
       sortBars: async () => {
         console.log("Sorting bars triggered for algorithm:", algorithm); // Debug log
@@ -38,17 +40,26 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           console.log(`Unknown algorithm: ${lowerCaseAlgorithm}`);
         }
       },
+
       reset: () => {
         console.log("reset clicked");
+
+        // if (animationFrameRef.current) {
+        //   cancelAnimationFrame(animationFrameRef.current);
+        //   animationFrameRef.current = null;
+        // }
+
+        //delete current bars
         barsRef.current.forEach((bar) => scene.remove(bar));
         barsRef.current = []; // Clear the reference array
         heights.current = []; // Reset heights array
+
+        //generate new bars
         const newBars = generateBars();
         newBars.forEach((bar) => {
           scene.add(bar);
           barsRef.current.push(bar);
         });
-
         console.log("Bars reset successfully.");
       },
     }));
@@ -58,14 +69,15 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     // Bubble Sort Algorithm for visualiser
     const bubbleSort = async () => {
       console.log("Starting Bubble Sort...");
+      if (!barsRef.current.length || !heights.current.length) return;
 
       const n = heights.current.length;
-      console.log(heights);
       let swapped;
 
       for (let i = 0; i < n - 1; i++) {
         swapped = false; //flag for stop
         for (let j = 0; j < n - 1 - i; j++) {
+          // if (animationFrameRef.current === null) return; // Stop if reset is called
           if (heights.current[j] > heights.current[j + 1]) {
             // Swap heights in array
             [heights.current[j], heights.current[j + 1]] = [
@@ -86,11 +98,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
             swapped = true;
           }
         }
-
         // If no elements were swapped, the array is sorted
         if (!swapped) break;
       }
-
       console.log("Bubble Sort completed.");
     };
     //*****************************************************************
@@ -106,6 +116,8 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         const startTime = performance.now();
 
         const animate = (currentTime: number) => {
+          // if (animationFrameRef.current === null) return resolve(); // Exit if reset
+
           const elapsed = currentTime - startTime;
           const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
 
@@ -114,12 +126,14 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           bar2.position.x = initialX2 * (1 - t) + initialX1 * t;
 
           if (t < 1) {
+            // animationFrameRef.current =
             requestAnimationFrame(animate);
           } else {
             resolve();
           }
         };
 
+        // animationFrameRef.current =
         requestAnimationFrame(animate);
       });
     };
@@ -130,6 +144,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       //clear old bars first
       barsRef.current.forEach((bar) => scene.remove(bar));
       barsRef.current = []; // Clear the reference array
+
       // Generate bars
       const barCount = 10;
       const barWidth = 1;
@@ -152,6 +167,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         const material = new THREE.MeshBasicMaterial({
           color: new THREE.Color(Math.random(), Math.random(), Math.random()),
         });
+
         const bar = new THREE.Mesh(geometry, material);
         bar.position.x = i * spacing - (barCount / 2) * spacing;
         bar.position.y = heights.current[i] / 2;
@@ -162,11 +178,12 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     };
     //***************************************************************** */
 
-    const scene = useRef(new THREE.Scene()).current; // Ensure a single scene instance
+    const scene = useRef(new THREE.Scene()).current; // Ensure a single scene instance outside of useffect
 
     useEffect(() => {
       if (!containerRef.current) return;
 
+      // initializedRef.current = true;
       // Set up scene, camera, and renderer
       const camera = new THREE.PerspectiveCamera(
         75,
@@ -179,6 +196,10 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       const renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight);
       containerRef.current.appendChild(renderer.domElement);
+
+      sceneRef.current = scene;
+      cameraRef.current = camera;
+      rendererRef.current = renderer;
 
       // Add lighting
       const light = new THREE.AmbientLight(0xffffff, 0.5);
@@ -205,6 +226,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       // Animation loop
       const animate = () => {
+        // animationFrameRef.current =
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
       };
@@ -212,9 +234,32 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       // Clean up on unmount
       return () => {
+        // if (animationFrameRef.current) {
+        //   cancelAnimationFrame(animationFrameRef.current);
+        // }
+        // animationFrameRef.current = null;
         renderer.dispose();
       };
-    }, [resetCounter]);
+    });
+
+    useEffect(() => {
+      const handleResize = () => {
+        if (rendererRef.current && cameraRef.current) {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+
+          rendererRef.current.setSize(width, height);
+          cameraRef.current.aspect = width / height;
+          cameraRef.current.updateProjectionMatrix();
+        }
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    }, []);
 
     //*****************************************************************
 
