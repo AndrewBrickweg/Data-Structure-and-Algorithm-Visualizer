@@ -14,7 +14,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
   ({ algorithm }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    //refs for bars
+    //refs for handling bars
     const barsRef = useRef<THREE.Mesh[]>([]);
     const heights = useRef<number[]>([]);
 
@@ -24,7 +24,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
     //refs for single screen render and animation tracking
-    // const initializedRef = useRef(false);
+    const initializedRef = useRef(false);
     // const animationFrameRef = useRef<number | null>(null); // Track the animation frame
 
     // Expose sortBars function to the parent component through the ref
@@ -181,9 +181,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     const scene = useRef(new THREE.Scene()).current; // Ensure a single scene instance outside of useffect
 
     useEffect(() => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || initializedRef.current) return;
 
-      // initializedRef.current = true;
+      initializedRef.current = true;
       // Set up scene, camera, and renderer
       const camera = new THREE.PerspectiveCamera(
         75,
