@@ -25,7 +25,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
     //refs for single screen render and animation tracking
     const initializedRef = useRef(false);
-    // const animationFrameRef = useRef<number | null>(null); // Track the animation frame
+    const animationFrameRef = useRef<number | null>(null); // Track the animation frame
 
     // Expose sortBars function to the parent component through the ref
     // Calls the specific sorting algorithm
@@ -44,10 +44,10 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       reset: () => {
         console.log("reset clicked");
 
-        // if (animationFrameRef.current) {
-        //   cancelAnimationFrame(animationFrameRef.current);
-        //   animationFrameRef.current = null;
-        // }
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
 
         //delete current bars
         barsRef.current.forEach((bar) => scene.remove(bar));
@@ -77,7 +77,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       for (let i = 0; i < n - 1; i++) {
         swapped = false; //flag for stop
         for (let j = 0; j < n - 1 - i; j++) {
-          // if (animationFrameRef.current === null) return; // Stop if reset is called
+          if (animationFrameRef.current === null) return; // Stop if reset is called
           if (heights.current[j] > heights.current[j + 1]) {
             // Swap heights in array
             [heights.current[j], heights.current[j + 1]] = [
@@ -112,11 +112,11 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         const initialX1 = bar1.position.x;
         const initialX2 = bar2.position.x;
 
-        const duration = 200; // Animation duration in milliseconds
+        const duration = 150; // Animation duration in milliseconds
         const startTime = performance.now();
 
         const animate = (currentTime: number) => {
-          // if (animationFrameRef.current === null) return resolve(); // Exit if reset
+          if (animationFrameRef.current === null) return resolve(); // Exit if reset
 
           const elapsed = currentTime - startTime;
           const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
@@ -126,15 +126,13 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           bar2.position.x = initialX2 * (1 - t) + initialX1 * t;
 
           if (t < 1) {
-            // animationFrameRef.current =
-            requestAnimationFrame(animate);
+            animationFrameRef.current = requestAnimationFrame(animate);
           } else {
             resolve();
           }
         };
 
-        // animationFrameRef.current =
-        requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animate);
       });
     };
     //*****************************************************************
@@ -165,7 +163,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         );
 
         const material = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+          color: 0x0000ff,
+
+          // Math.random(), Math.random(), Math.random()
         });
 
         const bar = new THREE.Mesh(geometry, material);
@@ -226,18 +226,17 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       // Animation loop
       const animate = () => {
-        // animationFrameRef.current =
-        requestAnimationFrame(animate);
+        animationFrameRef.current = requestAnimationFrame(animate);
         renderer.render(scene, camera);
       };
       animate();
 
       // Clean up on unmount
       return () => {
-        // if (animationFrameRef.current) {
-        //   cancelAnimationFrame(animationFrameRef.current);
-        // }
-        // animationFrameRef.current = null;
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        animationFrameRef.current = null;
         renderer.dispose();
       };
     });
