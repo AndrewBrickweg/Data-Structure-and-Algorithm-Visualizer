@@ -25,7 +25,8 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
     //refs for single screen render and animation tracking
     const initializedRef = useRef(false);
-    const animationFrameRef = useRef<number | null>(null); // Track the animation frame
+    const sorting = useRef(false);
+    // const animationFrameRef = useRef<number | null>(null); // Track the animation frame
 
     // Expose sortBars function to the parent component through the ref
     // Calls the specific sorting algorithm
@@ -44,10 +45,10 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       reset: () => {
         console.log("reset clicked");
 
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-          animationFrameRef.current = null;
-        }
+        // if (animationFrameRef.current) {
+        //   cancelAnimationFrame(animationFrameRef.current);
+        //   animationFrameRef.current = null;
+        // }
 
         //delete current bars
         barsRef.current.forEach((bar) => scene.remove(bar));
@@ -70,6 +71,8 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     const bubbleSort = async () => {
       console.log("Starting Bubble Sort...");
       if (!barsRef.current.length || !heights.current.length) return;
+      if (sorting.current) return;
+      sorting.current = true;
 
       const n = heights.current.length;
       let swapped;
@@ -77,7 +80,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       for (let i = 0; i < n - 1; i++) {
         swapped = false; //flag for stop
         for (let j = 0; j < n - 1 - i; j++) {
-          if (animationFrameRef.current === null) return; // Stop if reset is called
+          // if (animationFrameRef.current === null) return; // Stop if reset is called
           if (heights.current[j] > heights.current[j + 1]) {
             // Swap heights in array
             [heights.current[j], heights.current[j + 1]] = [
@@ -101,6 +104,8 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         // If no elements were swapped, the array is sorted
         if (!swapped) break;
       }
+
+      sorting.current = false;
       console.log("Bubble Sort completed.");
     };
     //*****************************************************************
@@ -116,7 +121,7 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         const startTime = performance.now();
 
         const animate = (currentTime: number) => {
-          if (animationFrameRef.current === null) return resolve(); // Exit if reset
+          // if (animationFrameRef.current === null) return resolve(); // Exit if reset
 
           const elapsed = currentTime - startTime;
           const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
@@ -126,13 +131,15 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           bar2.position.x = initialX2 * (1 - t) + initialX1 * t;
 
           if (t < 1) {
-            animationFrameRef.current = requestAnimationFrame(animate);
+            // animationFrameRef.current =
+            requestAnimationFrame(animate);
           } else {
             resolve();
           }
         };
 
-        animationFrameRef.current = requestAnimationFrame(animate);
+        // animationFrameRef.current =
+        requestAnimationFrame(animate);
       });
     };
     //*****************************************************************
@@ -226,17 +233,18 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       // Animation loop
       const animate = () => {
-        animationFrameRef.current = requestAnimationFrame(animate);
+        // animationFrameRef.current =
+        requestAnimationFrame(animate);
         renderer.render(scene, camera);
       };
       animate();
 
       // Clean up on unmount
       return () => {
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
-        animationFrameRef.current = null;
+        // if (animationFrameRef.current) {
+        //   cancelAnimationFrame(animationFrameRef.current);
+        // }
+        // animationFrameRef.current = null;
         renderer.dispose();
       };
     });
