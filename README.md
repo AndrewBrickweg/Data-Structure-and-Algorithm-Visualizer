@@ -4,6 +4,17 @@ as you rotate around the clock you can click on different algorithm visualizers
 
 representing space and time complexity
 
+Algorithms:
+In a maze, in an arrange puzzle game
+
+Informed Searches:
+A\*
+Uniform Cost Search
+
+Uninformed Search
+Depth First Search
+Breadth First Search
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
