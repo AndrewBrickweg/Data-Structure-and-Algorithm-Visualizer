@@ -3,7 +3,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 import React from "react";
-
+import sortingAlgorithms from "@/app/algorithms/sorting";
 interface VisualizerProps {
   algorithm: string;
 }
@@ -33,14 +33,15 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       sortBars: async () => {
         console.log("Sorting bars triggered for algorithm:", algorithm); // Debug log
 
-        const lowerCaseAlgorithm = algorithm.toLowerCase();
-        if (lowerCaseAlgorithm === "bubblesort") {
-          await bubbleSort();
+        const sortFunction = sortingAlgorithms[algorithm];
+
+        if (sortFunction) {
+          await sortFunction(heights.current, barsRef.current, animateSwap);
         } else {
-          console.log(`Unknown algorithm: ${lowerCaseAlgorithm}`);
+          console.warn(`Algorithm ${algorithm} not found.`);
         }
       },
-
+      // Reset function to clear and regenerate bars
       reset: () => {
         console.log("reset clicked");
 
@@ -66,43 +67,44 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     //*****************************************************************
 
     //*****************************************************************
+
     // Bubble Sort Algorithm for visualiser
-    const bubbleSort = async () => {
-      console.log("Starting Bubble Sort...");
-      if (!barsRef.current.length || !heights.current.length) return;
+    // const bubbleSort = async () => {
+    //   console.log("Starting Bubble Sort...");
+    //   if (!barsRef.current.length || !heights.current.length) return;
 
-      const n = heights.current.length;
-      let swapped;
+    //   const n = heights.current.length;
+    //   let swapped;
 
-      for (let i = 0; i < n - 1; i++) {
-        swapped = false; //flag for stop
-        for (let j = 0; j < n - 1 - i; j++) {
-          // if (animationFrameRef.current === null) return; // Stop if reset is called
-          if (heights.current[j] > heights.current[j + 1]) {
-            // Swap heights in array
-            [heights.current[j], heights.current[j + 1]] = [
-              heights.current[j + 1],
-              heights.current[j],
-            ];
+    //   for (let i = 0; i < n - 1; i++) {
+    //     swapped = false; //flag for stop
+    //     for (let j = 0; j < n - 1 - i; j++) {
+    //       // if (animationFrameRef.current === null) return; // Stop if reset is called
+    //       if (heights.current[j] > heights.current[j + 1]) {
+    //         // Swap heights in array
+    //         [heights.current[j], heights.current[j + 1]] = [
+    //           heights.current[j + 1],
+    //           heights.current[j],
+    //         ];
 
-            // Swap bars in array
-            const bar1 = barsRef.current[j];
-            const bar2 = barsRef.current[j + 1];
-            [barsRef.current[j], barsRef.current[j + 1]] = [
-              barsRef.current[j + 1],
-              barsRef.current[j],
-            ];
+    //         // Swap bars in array
+    //         const bar1 = barsRef.current[j];
+    //         const bar2 = barsRef.current[j + 1];
+    //         [barsRef.current[j], barsRef.current[j + 1]] = [
+    //           barsRef.current[j + 1],
+    //           barsRef.current[j],
+    //         ];
 
-            // Animate the swap
-            await animateSwap(bar1, bar2);
-            swapped = true;
-          }
-        }
-        // If no elements were swapped, the array is sorted
-        if (!swapped) break;
-      }
-      console.log("Bubble Sort completed.");
-    };
+    //         // Animate the swap
+    //         await animateSwap(bar1, bar2);
+    //         swapped = true;
+    //       }
+    //     }
+    //     // If no elements were swapped, the array is sorted
+    //     if (!swapped) break;
+    //   }
+    //   console.log("Bubble Sort completed.");
+    // };
     //*****************************************************************
 
     //*****************************************************************

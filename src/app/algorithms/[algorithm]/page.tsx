@@ -16,6 +16,7 @@ const AlgorithmPage = () => {
     typeof algorithm === "string" && algorithm !== "sorting"
       ? algorithm
       : "bubbleSort";
+
   console.log("Algorithm Name:", algorithmName); // Debug log
 
   const handleSortStart = () => {
