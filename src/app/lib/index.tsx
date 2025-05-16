@@ -1,4 +1,5 @@
-import { bubbleSort } from "./bubbleSort";
+//index page for exporting sorting algorithms
+import { bubbleSort } from "./algorithms/sorting/bubbleSort";
 import * as THREE from "three";
 
 type sortFunction = (

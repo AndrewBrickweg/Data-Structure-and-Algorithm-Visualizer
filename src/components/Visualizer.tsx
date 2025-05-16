@@ -3,7 +3,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as THREE from "three";
 import React from "react";
-import sortingAlgorithms from "@/app/algorithms/sorting";
+import sortingAlgorithms from "@/app/lib";
 interface VisualizerProps {
   algorithm: string;
 }
@@ -23,32 +23,36 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
     const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
-    //refs for single screen render and animation tracking
-    // const initializedRef = useRef(false);
-    // const animationFrameRef = useRef<number | null>(null); // Track the animation frame
-
     // Expose sortBars function to the parent component through the ref
     // Calls the specific sorting algorithm
+    const isSortingRef = useRef(false);
+
     useImperativeHandle(ref, () => ({
       sortBars: async () => {
         console.log("Sorting bars triggered for algorithm:", algorithm); // Debug log
-
+        if (isSortingRef.current) return; // Prevent multiple clicks
+        isSortingRef.current = true;
+        console.log("isSortingRef set to true"); // Debug log
         const sortFunction = sortingAlgorithms[algorithm];
 
-        if (sortFunction) {
-          await sortFunction(heights.current, barsRef.current, animateSwap);
-        } else {
-          console.warn(`Algorithm ${algorithm} not found.`);
+        try {
+          if (sortFunction) {
+            await sortFunction(heights.current, barsRef.current, animateSwap);
+          } else {
+            console.warn(`Algorithm ${algorithm} not found.`);
+          }
+        } finally {
+          isSortingRef.current = false; // Always release the lock
         }
+        // if (sortFunction) {
+        //   await sortFunction(heights.current, barsRef.current, animateSwap);
+        // } else {
+        //   console.warn(`Algorithm ${algorithm} not found.`);
+        // }
       },
       // Reset function to clear and regenerate bars
       reset: () => {
         console.log("reset clicked");
-
-        // if (animationFrameRef.current) {
-        //   cancelAnimationFrame(animationFrameRef.current);
-        //   animationFrameRef.current = null;
-        // }
 
         //delete current bars
         barsRef.current.forEach((bar) => scene.remove(bar));
@@ -67,47 +71,6 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
     //*****************************************************************
 
     //*****************************************************************
-
-    // Bubble Sort Algorithm for visualiser
-    // const bubbleSort = async () => {
-    //   console.log("Starting Bubble Sort...");
-    //   if (!barsRef.current.length || !heights.current.length) return;
-
-    //   const n = heights.current.length;
-    //   let swapped;
-
-    //   for (let i = 0; i < n - 1; i++) {
-    //     swapped = false; //flag for stop
-    //     for (let j = 0; j < n - 1 - i; j++) {
-    //       // if (animationFrameRef.current === null) return; // Stop if reset is called
-    //       if (heights.current[j] > heights.current[j + 1]) {
-    //         // Swap heights in array
-    //         [heights.current[j], heights.current[j + 1]] = [
-    //           heights.current[j + 1],
-    //           heights.current[j],
-    //         ];
-
-    //         // Swap bars in array
-    //         const bar1 = barsRef.current[j];
-    //         const bar2 = barsRef.current[j + 1];
-    //         [barsRef.current[j], barsRef.current[j + 1]] = [
-    //           barsRef.current[j + 1],
-    //           barsRef.current[j],
-    //         ];
-
-    //         // Animate the swap
-    //         await animateSwap(bar1, bar2);
-    //         swapped = true;
-    //       }
-    //     }
-    //     // If no elements were swapped, the array is sorted
-    //     if (!swapped) break;
-    //   }
-    //   console.log("Bubble Sort completed.");
-    // };
-    //*****************************************************************
-
-    //*****************************************************************
     // Animate Bar Swap
     const animateSwap = (bar1: THREE.Mesh, bar2: THREE.Mesh) => {
       return new Promise<void>((resolve) => {
@@ -118,8 +81,6 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
         const startTime = performance.now();
 
         const animate = (currentTime: number) => {
-          // if (animationFrameRef.current === null) return resolve(); // Exit if reset
-
           const elapsed = currentTime - startTime;
           const t = Math.min(elapsed / duration, 1); // Normalized time (0 to 1)
 
@@ -128,21 +89,21 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
           bar2.position.x = initialX2 * (1 - t) + initialX1 * t;
 
           if (t < 1) {
-            // animationFrameRef.current =
             requestAnimationFrame(animate);
           } else {
             resolve();
           }
         };
 
-        // animationFrameRef.current =
         requestAnimationFrame(animate);
       });
     };
     //*****************************************************************
 
     //*****************************************************************
-    const generateBars = () => {
+    const scene = useRef(new THREE.Scene()).current; // Ensure a single scene instance outside of useffect
+
+    const generateBars = React.useCallback(() => {
       //clear old bars first
       barsRef.current.forEach((bar) => scene.remove(bar));
       barsRef.current = []; // Clear the reference array
@@ -177,15 +138,12 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
       }
 
       return bars;
-    };
+    }, [scene]);
     //***************************************************************** */
-
-    const scene = useRef(new THREE.Scene()).current; // Ensure a single scene instance outside of useffect
 
     useEffect(() => {
       if (!containerRef.current) return;
 
-      // initializedRef.current = true;
       // Set up scene, camera, and renderer
       const camera = new THREE.PerspectiveCamera(
         75,
@@ -228,7 +186,6 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       // Animation loop
       const animate = () => {
-        // animationFrameRef.current =
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
       };
@@ -236,13 +193,9 @@ const Visualizer = forwardRef<{ sortBars: () => void }, VisualizerProps>(
 
       // Clean up on unmount
       return () => {
-        // if (animationFrameRef.current) {
-        //   cancelAnimationFrame(animationFrameRef.current);
-        // }
-        // animationFrameRef.current = null;
         renderer.dispose();
       };
-    });
+    }, [generateBars, scene]);
 
     useEffect(() => {
       const handleResize = () => {

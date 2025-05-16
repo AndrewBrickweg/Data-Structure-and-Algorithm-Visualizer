@@ -10,8 +10,6 @@ const Home = () => {
       </p>
 
       <div className="flex flex-col items-center gap-4">
-        {/* Example links to algorithm visualizations */}
-
         <Link
           href="/algorithms/sorting"
           className="text-blue-500 hover:underline text-xl"

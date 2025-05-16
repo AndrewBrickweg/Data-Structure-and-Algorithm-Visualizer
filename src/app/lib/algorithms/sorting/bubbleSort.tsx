@@ -12,15 +12,18 @@ export async function bubbleSort(
 
   for (let i = 0; i < n - 1; i++) {
     swapped = false;
-    for (let j = 0; j < n - 1; j++) {
+    for (let j = 0; j < n - i - 1; j++) {
       if (heights[j] > heights[j + 1]) {
         // Swap heights in array
         [heights[j], heights[j + 1]] = [heights[j + 1], heights[j]];
 
         //swap bars in array
-        [bars[j], bars[j + 1]] = [bars[j + 1], bars[j]];
+        const bar1 = bars[j];
+        const bar2 = bars[j + 1];
 
-        await animateSwap(bars[j], bars[j + 1]);
+        await animateSwap(bar1, bar2);
+
+        [bars[j], bars[j + 1]] = [bars[j + 1], bars[j]];
         swapped = true;
       }
     }
